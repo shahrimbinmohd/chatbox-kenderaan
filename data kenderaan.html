@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbox Carian Kenderaan</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #chatbox { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+        input, button { width: 100%; padding: 10px; margin: 5px 0; }
+        #result { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Carian Kenderaan Penghuni</h2>
+    <div id="chatbox">
+        <input type="text" id="searchInput" placeholder="Masukkan nombor plat kenderaan...">
+        <button onclick="searchVehicle()">Cari</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let data = [];
+
+        async function loadData() {
+            const response = await fetch('data_kenderaan.json');
+            data = await response.json();
+        }
+
+        function searchVehicle() {
+            const searchValue = document.getElementById('searchInput').value.toUpperCase();
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = "";
+            
+            const found = data.find(entry => 
+                Object.values(entry).some(value => 
+                    typeof value === 'string' && value.toUpperCase().includes(searchValue)
+                )
+            );
+            
+            if (found) {
+                resultDiv.innerHTML = `<p>No Rumah: ${found.NO_RUMAH}</p><p>Nama Pemilik: ${found.NAMA}</p>`;
+            } else {
+                resultDiv.innerHTML = "<p>Maklumat tidak dijumpai.</p>";
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
