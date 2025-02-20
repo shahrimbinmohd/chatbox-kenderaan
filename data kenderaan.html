@@ -1,51 +1,56 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbox Carian Kenderaan</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        #chatbox { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-        input, button { width: 100%; padding: 10px; margin: 5px 0; }
-        #result { margin-top: 20px; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h2>Carian Kenderaan Penghuni</h2>
-    <div id="chatbox">
-        <input type="text" id="searchInput" placeholder="Masukkan nombor plat kenderaan...">
-        <button onclick="searchVehicle()">Cari</button>
-        <div id="result"></div>
-    </div>
-
+    <title>Car Info Chatbox</title>
     <script>
-        let data = [];
-
-        async function loadData() {
-            const response = await fetch('data_kenderaan_clean.json');
-            data = await response.json();
+        let dataKenderaan = [];
+        
+        // ID Google Sheet (ganti dengan ID sebenar)
+        const SHEET_ID = "1284682716";
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+        
+        function fetchData() {
+            fetch(SHEET_URL)
+                .then(response => response.text())
+                .then(data => {
+                    let jsonData = JSON.parse(data.substring(47).slice(0, -2));
+                    let rows = jsonData.table.rows;
+                    dataKenderaan = rows.map(row => {
+                        return {
+                            NO_RUMAH: row.c[0]?.v || "",
+                            NAMA: row.c[1]?.v || "",
+                            KENDERAAN: [row.c[2]?.v, row.c[3]?.v, row.c[4]?.v].filter(Boolean)
+                        };
+                    });
+                    console.log("Data Loaded:", dataKenderaan);
+                })
+                .catch(error => console.error("Error loading data:", error));
         }
-
+        
         function searchVehicle() {
-            const searchValue = document.getElementById('searchInput').value.toUpperCase();
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = "";
+            let input = document.getElementById("plateInput").value.trim().toUpperCase();
+            let resultBox = document.getElementById("result");
+            resultBox.innerHTML = "";
             
-            const found = data.find(entry => 
-                Object.values(entry).some(value => 
-                    typeof value === 'string' && value.toUpperCase().includes(searchValue)
-                )
-            );
+            let result = dataKenderaan.find(entry => entry.KENDERAAN.includes(input));
             
-            if (found) {
-                resultDiv.innerHTML = `<p>No Rumah: ${found.NO_RUMAH}</p><p>Nama Pemilik: ${found.NAMA}</p>`;
+            if (result) {
+                resultBox.innerHTML = `<p><strong>No Rumah:</strong> ${result.NO_RUMAH}</p>
+                                       <p><strong>Nama Pemilik:</strong> ${result.NAMA}</p>`;
             } else {
-                resultDiv.innerHTML = "<p>Maklumat tidak dijumpai.</p>";
+                resultBox.innerHTML = "<p>Maklumat tidak dijumpai.</p>";
             }
         }
-
-        loadData();
+        
+        window.onload = fetchData;
     </script>
+</head>
+<body>
+    <h2>Car Info Chatbox</h2>
+    <input type="text" id="plateInput" placeholder="Masukkan No Plat Kenderaan" />
+    <button onclick="searchVehicle()">Cari</button>
+    <div id="result"></div>
 </body>
 </html>
